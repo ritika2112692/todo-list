@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        /* Background image styles */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --danger: #e63946;
+            --success: #4cc9f0;
+            --low-priority: #4cc9f0;
+            --medium-priority: #f8961e;
+            --high-priority: #f94144;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f5f7fa;
+            color: var(--dark);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        #task-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        #task-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        #add-btn {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #add-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        #task-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .task-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .task-text {
+            flex: 1;
+        }
+        
+        .delete-btn {
+            color: var(--danger);
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-left: 1rem;
+            transition: transform 0.2s;
+        }
+        
+        .delete-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            margin-top: 2rem;
+        }
+
+        /* Category tags */
+        .category-tag {
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+
+        .category-work { background: #4cc9f0; color: white; }
+        .category-personal { background: #4895ef; color: white; }
+        .category-shopping { background: #4361ee; color: white; }
+
+        /* Priority indicators */
+        .priority-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .priority-low { background: #4cc9f0; }
+        .priority-medium { background: #f8961e; }
+        .priority-high { background: #f94144; }
+
+        /* Input row styling */
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-select, .priority-select {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        #page-info {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+        <img src="https://cdn-icons-png.flaticon.com/512/2387/2387679.png" alt="Todo Icon" style="height: 60px; width: 60px;">
+        <h1 style="margin: 0;">✨ Enhanced Todo List</h1>
+    </div>
+    <div class="input-container">
+        <input type="text" id="task-input" placeholder="What needs to be done?">
+        <input type="date" id="due-date" class="date-input">
+        <select id="category" class="category-select">
+            <option value="work">Work</option>
+            <option value="personal">Personal</option>
+            <option value="shopping">Shopping</option>
+        </select>
+        <select id="priority" class="priority-select">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+        </select>
+        <button id="add-btn">➕ Add Task</button>
+    </div>
+    <div class="filter-container">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+    </div>
+    <ul id="task-list"></ul>
+    <div id="empty-state" class="empty-state" style="display: none; text-align: center;">
+        <img src="https://cdn-icons-png.flaticon.com/512/4052/4052984.png" alt="Empty tasks" style="height: 100px; width: 100px; margin-bottom: 1rem;">
+        <p>No tasks yet. Add one above!</p>
+    </div>
+    <div class="backup-container">
+        <button id="export-btn">📤 Export Tasks</button>
+        <button id="import-btn">📥 Import Tasks</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;">
+    </div>
+    <div class="pagination">
+        <button id="prev-page" disabled>Previous</button>
+        <span id="page-info">Page 1</span>
+        <button id="next-page">Next</button>
+    </div>
+
+    <script>
+        // Load tasks when page loads
+        document.addEventListener('DOMContentLoaded', loadTasks);
+        document.getElementById('add-btn').addEventListener('click', addTask);
+        
+        // Pagination variables
+        let currentPage = 0; // Start at 0 for array index
+        const categories = ['all', 'work', 'personal', 'shopping'];
+        const categoryNames = {
+            'all': 'All Tasks',
+            'work': 'Work',
+            'personal': 'Personal', 
+            'shopping': 'Shopping'
+        };
+        
+        function loadTasks(filter = 'all') {
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const taskList = document.getElementById('task-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            taskList.innerHTML = '';
+            
+            // First filter by completion status
+            let filteredTasks = tasks.filter(task => {
+                if (filter === 'active') return !task.completed;
+                if (filter === 'completed') return task.completed;
+                return true;
+            });
+
+            // Then filter by current category if not 'all'
+            const currentCategory = categories[currentPage];
+            if (currentCategory !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.category === currentCategory);
+            }
+
+            if (filteredTasks.length === 0) {
+                emptyState.style.display = 'block';
+                document.getElementById('prev-page').disabled = currentPage === 0;
+                document.getElementById('next-page').disabled = currentPage === categories.length - 1;
+            } else {
+                emptyState.style.display = 'none';
+                
+                // Update pagination controls
+                document.getElementById('prev-page').disabled = currentPage === 0;
+                document.getElementById('next-page').disabled = currentPage === categories.length - 1;
+                document.getElementById('page-info').textContent = categoryNames[categories[currentPage]];
+                
+                // Display all filtered tasks
+                filteredTasks.forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.className = `task-item ${task.priority}-priority ${task.completed ? 'completed' : ''}`;
+                    li.innerHTML = `
+                        <div class="task-content">
+                            <input type="checkbox" class="complete-checkbox" data-id="${index}" ${task.completed ? 'checked' : ''}>
+                            <span class="priority-indicator priority-${task.priority}"></span>
+                            <span class="task-text">${task.description}</span>
+                            <span class="category-tag category-${task.category}">
+                                ${task.category}
+                            </span>
+                            ${task.dueDate ? `<span class="due-date">📅 ${new Date(task.dueDate).toLocaleDateString()}</span>` : ''}
+                        </div>
+                        <button class="delete-btn" data-id="${index}" title="Delete task">✕</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+
+                // Add event listeners
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', deleteTask);
+                });
+                document.querySelectorAll('.complete-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', toggleComplete);
+                });
+            }
+        }
+
+        function toggleComplete(e) {
+            const taskId = e.target.getAttribute('data-id');
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            tasks[taskId].completed = e.target.checked;
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            loadTasks(document.querySelector('.filter-btn.active').dataset.filter);
+        }
+        
+        function addTask() {
+            const taskInput = document.getElementById('task-input');
+            const dueDateInput = document.getElementById('due-date');
+            const prioritySelect = document.getElementById('priority');
+            const taskText = taskInput.value.trim();
+            
+            if (taskText) {
+                const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+                tasks.push({
+                    description: taskText,
+                    dueDate: dueDateInput.value,
+                    priority: prioritySelect.value,
+                    category: document.getElementById('category').value,
+                    completed: false
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                taskInput.value = '';
+                dueDateInput.value = '';
+                prioritySelect.value = 'low';
+                loadTasks(document.querySelector('.filter-btn.active').dataset.filter);
+            }
+        }
+
+        // Filter tasks
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                loadTasks(this.dataset.filter);
+            });
+        });
+
+        // Export/Import functionality
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const dataStr = JSON.stringify(tasks);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'tasks-backup.json';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+
+        document.getElementById('import-btn').addEventListener('click', () => {
+            document.getElementById('import-file').click();
+        });
+
+        document.getElementById('import-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const tasks = JSON.parse(e.target.result);
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    loadTasks();
+                    alert('Tasks imported successfully!');
+                } catch (error) {
+                    alert('Error importing tasks: Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        function deleteTask(e) {
+            const taskId = e.target.getAttribute('data-id');
+            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            tasks.splice(taskId, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            loadTasks(document.querySelector('.filter-btn.active').dataset.filter);
+        }
+        
+        // Pagination event listeners
+        document.getElementById('prev-page').addEventListener('click', () => {
+            currentPage--;
+            loadTasks(document.querySelector('.filter-btn.active').dataset.filter);
+        });
+        
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            loadTasks(document.querySelector('.filter-btn.active').dataset.filter);
+        });
+    </script>
+</body>
+</html>
